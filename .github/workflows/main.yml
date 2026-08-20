@@ -14,9 +14,9 @@ jobs:
           submodules: recursive
 
       - name: Setup Android NDK
-        uses: nsetup/setup-sdk@v1
+        uses: nttld/setup-ndk@v1
         with:
-          ndk-version: '25.2.9519653'
+          ndk-version: r25c
 
       - name: Build Project
         run: |
@@ -26,7 +26,7 @@ jobs:
             chmod +x build.sh
             ./build.sh
           else
-            echo "No build script found"
+            echo "No Makefile or build.sh script found."
           fi
 
       - name: Upload Artifacts

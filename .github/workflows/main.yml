@@ -18,22 +18,18 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Direct Compilation
+      - name: Run Make
         run: |
-          mkdir -p out
-          CLANG=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang
+          # Point the Makefile to the installed Android NDK path
+          export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           
-          # Compile source files directly
-          $CLANG -O2 -fPIC -shared -Wall \
-            -I. \
-            -IKernelPatch/include \
-            -o out/selinux_hook.kpm \
-            *.c || true
-
-          ls -la out/
+          # Compile using the Makefile target
+          make clean
+          make
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: selinux_hook_kpm
-          path: out/
+          path: "*.kpm"

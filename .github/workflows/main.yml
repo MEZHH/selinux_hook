@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -18,28 +18,25 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Inspect Repository Files
+      - name: Direct Compilation
         run: |
-          echo "=== Directory Structure ==="
-          ls -la
-          echo "=== KernelPatch Submodule Check ==="
-          ls -la KernelPatch || echo "KernelPatch directory missing"
-
-      - name: Build Module with NDK
-        run: |
-          export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
-          export NDK=$ANDROID_NDK_LATEST_HOME
-          export PATH=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          mkdir -p out
           
-          # Attempt build and output build logs
-          make ARCH=arm64 || make
+          # Set up toolchain paths
+          CLANG=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang
+          
+          # Compile hook.c directly with KernelPatch headers
+          $CLANG -O2 -fPIC -shared -Wall \
+            -I. \
+            -IKernelPatch/include \
+            -o out/selinux_hook.kpm \
+            hook.c || $CLANG -O2 -fPIC -shared -Wall -I. -IKernelPatch/include -o out/selinux_hook.kpm main.c
+
+          echo "Directory contents after build:"
+          ls -la out/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: selinux_hook_kpm
-          path: |
-            *.kpm
-            *.so
-            out/
-          if-no-files-found: warn
+          path: out/selinux_hook.kpm

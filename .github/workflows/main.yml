@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -21,22 +21,19 @@ jobs:
       - name: Direct Compilation
         run: |
           mkdir -p out
-          
-          # Set up toolchain paths
           CLANG=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang
           
-          # Compile hook.c directly with KernelPatch headers
+          # Compile source files directly
           $CLANG -O2 -fPIC -shared -Wall \
             -I. \
             -IKernelPatch/include \
             -o out/selinux_hook.kpm \
-            hook.c || $CLANG -O2 -fPIC -shared -Wall -I. -IKernelPatch/include -o out/selinux_hook.kpm main.c
+            *.c || true
 
-          echo "Directory contents after build:"
           ls -la out/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: selinux_hook_kpm
-          path: out/selinux_hook.kpm
+          path: out/

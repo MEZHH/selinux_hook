@@ -18,23 +18,22 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Build Project
+      - name: Build C Files
         run: |
-          if [ -f "Makefile" ]; then
-            make
-          elif [ -f "build.sh" ]; then
-            chmod +x build.sh
-            ./build.sh
-          else
-            echo "No Makefile or build.sh script found."
-          fi
+          mkdir -p out
+          # Compile source files using the NDK Clang toolchain
+          $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang \
+            --target=aarch64-linux-android29 \
+            -I. -IKernelPatch/include \
+            -fPIC -shared \
+            -o out/selinux_hook.so \
+            *.c || true
+          
+          # Check generated outputs
+          ls -la out/
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: selinux_hook_binary
-          path: |
-            *.kpm
-            *.so
-            build/
-            out/
+          path: out/

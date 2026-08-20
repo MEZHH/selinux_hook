@@ -18,22 +18,21 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Build C Files
+      - name: Build Module with NDK
         run: |
-          mkdir -p out
-          # Compile source files using the NDK Clang toolchain
-          $ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang \
-            --target=aarch64-linux-android29 \
-            -I. -IKernelPatch/include \
-            -fPIC -shared \
-            -o out/selinux_hook.so \
-            *.c || true
+          # Set NDK environment variables for standard KernelPatch Makefiles
+          export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
+          export NDK=$ANDROID_NDK_LATEST_HOME
+          export PATH=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
           
-          # Check generated outputs
-          ls -la out/
+          # Run make to compile the KernelPatch module
+          make clean || true
+          make
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: selinux_hook_binary
-          path: out/
+          name: selinux_hook_kpm
+          path: |
+            *.kpm
+            out/

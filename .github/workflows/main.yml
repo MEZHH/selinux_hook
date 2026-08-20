@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -18,16 +18,21 @@ jobs:
         with:
           ndk-version: r25c
 
+      - name: Inspect Repository Files
+        run: |
+          echo "=== Directory Structure ==="
+          ls -la
+          echo "=== KernelPatch Submodule Check ==="
+          ls -la KernelPatch || echo "KernelPatch directory missing"
+
       - name: Build Module with NDK
         run: |
-          # Set NDK environment variables for standard KernelPatch Makefiles
           export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
           export NDK=$ANDROID_NDK_LATEST_HOME
           export PATH=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
           
-          # Run make to compile the KernelPatch module
-          make clean || true
-          make
+          # Attempt build and output build logs
+          make ARCH=arm64 || make
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -35,4 +40,6 @@ jobs:
           name: selinux_hook_kpm
           path: |
             *.kpm
+            *.so
             out/
+          if-no-files-found: warn

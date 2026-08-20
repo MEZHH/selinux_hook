@@ -20,14 +20,13 @@ jobs:
 
       - name: Build Project
         run: |
-          # If the repository includes a Makefile or build script, execute it here:
           if [ -f "Makefile" ]; then
             make
           elif [ -f "build.sh" ]; then
             chmod +x build.sh
             ./build.sh
           else
-            echo "No Makefile or build.sh found. Please specify your build command."
+            echo "No build script found"
           fi
 
       - name: Upload Artifacts
@@ -37,6 +36,5 @@ jobs:
           path: |
             *.kpm
             *.so
-            *.o
-            bin/
             build/
+            out/

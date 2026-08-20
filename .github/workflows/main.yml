@@ -8,10 +8,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with submodules
         uses: actions/checkout@v5
         with:
           submodules: recursive
+
+      - name: Ensure Submodules Loaded
+        run: |
+          git submodule update --init --recursive
+          ls -la KernelPatch/kernel/include || echo "Submodule check failed"
 
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
@@ -20,13 +25,18 @@ jobs:
 
       - name: Run Make
         run: |
-          # Point the Makefile to the installed Android NDK path
-          export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
-          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          # Set explicit path to NDK binaries
+          NDK_BIN=$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
           
-          # Compile using the Makefile target
-          make clean
-          make
+          # Clean prior build state
+          make clean || true
+          
+          # Override Makefile compiler variables directly
+          make \
+            KP_DIR=KernelPatch \
+            NDK_PATH=$NDK_BIN \
+            CC=$NDK_BIN/aarch64-linux-android31-clang \
+            OBJCOPY=$NDK_BIN/llvm-objcopy
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
